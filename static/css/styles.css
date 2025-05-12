@@ -1,0 +1,104 @@
+:root {
+  --primary: #00c3ff;
+  --dark: #1f1f1f;
+  --light: #f9f9f9;
+  --accent: #272727;
+  --text: #ffffff;
+  --bg: rgba(255, 255, 255, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, var(--dark), #2c3e50);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  background: var(--bg);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+h1, h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.drop-zone {
+  border: 2px dashed var(--primary);
+  border-radius: 15px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  text-align: center;
+  transition: 0.3s ease;
+}
+
+.drop-zone.dragover {
+  background-color: rgba(0, 195, 255, 0.2);
+  transform: scale(1.03);
+}
+
+button {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background-color: var(--primary);
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+button:hover {
+  background-color: #00a6d6;
+  transform: scale(1.03);
+}
+
+progress {
+  width: 100%;
+  height: 18px;
+  border-radius: 10px;
+}
+
+.file-list {
+  margin-top: 30px;
+}
+
+.file-list a {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  background: var(--accent);
+  margin-bottom: 10px;
+  border-radius: 10px;
+  color: white;
+  text-decoration: none;
+  transition: 0.3s ease;
+}
+
+.file-list a:hover {
+  background: #1a1a1a;
+  transform: translateX(4px);
+}

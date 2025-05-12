@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Multi-File Uploader</title>
+
+  <script>
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+      document.documentElement.classList.add("light-mode");
+    }
+  </script>
+
+  <style>
+    :root {
+      --primary: #1abc9c;
+      --dark: #2c3e50;
+      --light: #ecf0f1;
+      --accent: #34495e;
+
+      --bg-color: linear-gradient(135deg, var(--dark), #4ca1af);
+      --text-color: var(--light);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --link-bg: var(--accent);
+      --link-hover: var(--dark);
+    }
+
+    .light-mode {
+      --bg-color: #f2f2f2;
+      --text-color: #333;
+      --card-bg: #ffffff;
+      --link-bg: #ddd;
+      --link-hover: #bbb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 15px;
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 30px;
+      text-align: center;
+      transition: 0.3s ease;
+    }
+
+    .drop-zone.dragover {
+      background-color: rgba(26, 188, 156, 0.2);
+      transform: scale(1.03);
+    }
+
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background-color: var(--primary);
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #16a085;
+      transform: scale(1.03);
+    }
+
+    progress {
+      width: 100%;
+      height: 18px;
+      border-radius: 10px;
+    }
+
+    .file-list {
+      margin-top: 30px;
+    }
+
+    .file-list a {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      background: var(--link-bg);
+      margin-bottom: 10px;
+      border-radius: 10px;
+      color: var(--text-color);
+      text-decoration: none;
+      transition: 0.3s ease;
+    }
+
+    .file-list a:hover {
+      background: var(--link-hover);
+      transform: translateX(4px);
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+
+      .drop-zone {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-toggle">
+    <label>
+      <input type="checkbox" id="themeToggle">
+      🌙
+    </label>
+  </div>
+
+  <div class="container">
+    <h1>Upload Files</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <div class="drop-zone" id="drop-zone">
+        Drag & drop files here
+      </div>
+      <button type="button" id="browseButton">📁 Browse Files</button>
+      <input type="file" name="files" id="fileInput" multiple style="display: none;" />
+      <button type="submit">⬆️ Upload All</button>
+      <progress id="uploadProgress" value="0" max="100"></progress>
+    </form>
+
+    <div class="file-list">
+      <h2>Available Files</h2>
+      {% for file in files %}
+        <a href="{{ url_for('download_file', filename=file) }}">{{ file }}</a>
+      {% else %}
+        <p style="text-align:center;">No files uploaded yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("fileInput");
+    const browseButton = document.getElementById("browseButton");
+    const progressBar = document.getElementById("uploadProgress");
+    const form = document.getElementById("uploadForm");
+    const themeToggle = document.getElementById("themeToggle");
+
+    browseButton.addEventListener("click", () => fileInput.click());
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      fileInput.files = e.dataTransfer.files;
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const files = fileInput.files;
+      if (!files.length) return;
+
+      const totalFiles = files.length;
+      let uploaded = 0;
+
+      const uploadNext = (index) => {
+        if (index >= totalFiles) {
+          location.reload();
+          return;
+        }
+
+        const file = files[index];
+        const formData = new FormData();
+        formData.append("files", file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/", true);
+
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) {
+            progressBar.value = ((uploaded + e.loaded / e.total) / totalFiles) * 100;
+          }
+        };
+
+        xhr.onload = function () {
+          uploaded++;
+          uploadNext(index + 1);
+        };
+
+        xhr.onerror = function () {
+          alert("Upload failed for: " + file.name);
+        };
+
+        xhr.send(formData);
+      };
+
+      uploadNext(0);
+    });
+
+    if (document.documentElement.classList.contains("light-mode")) {
+      themeToggle.checked = true;
+    }
+
+    themeToggle.addEventListener("change", () => {
+      document.documentElement.classList.toggle("light-mode");
+      localStorage.setItem(
+        "theme",
+        document.documentElement.classList.contains("light-mode") ? "light" : "dark"
+      );
+    });
+  </script>
+</body>
+</html>
